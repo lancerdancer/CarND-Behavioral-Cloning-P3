@@ -12,6 +12,7 @@ with open('data1/driving_log.csv') as csvfile:
         lines.append(line)
 images = []
 measurements = []
+# use left, middle and right camera data here
 for line in lines:
     image = cv2.imread(line[0])
     image_l = cv2.imread(line[1])
@@ -56,31 +57,33 @@ from keras.layers.pooling import MaxPooling2D
 import matplotlib.pyplot as plt
 
 model = Sequential()
-keep_prob = 0.1
+# the probability to drop data is 0.1
+drop_prob = 0.1
 # normalize x with zero mean 160x320x3
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
 # cropping image output 65x320x3
 model.add(Cropping2D(cropping=((70,25),(0,0))))
 # NVIDIA CNN architecture
-# 2×2 stride and a 5×5 kernel
+# 2×2 stride and a 5×5 kernel convolutional layers
 model.add(Conv2D(24, kernel_size=(5, 5), strides=(2, 2), activation='relu'))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Conv2D(36, kernel_size=(5, 5), strides=(2, 2), activation='relu'))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Conv2D(48, kernel_size=(5, 5), strides=(2, 2), activation='relu'))
 model.add(Dropout(0.1))
-# 3×3 kernel
+# 3×3 kernel convolutional layes
 model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Flatten())
+# fully connected
 model.add(Dense(100))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Dense(50))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Dense(10))
-model.add(Dropout(keep_prob))
+model.add(Dropout(drop_prob))
 model.add(Dense(1))
 
 # compile and fit the model
@@ -88,10 +91,10 @@ model.compile(loss='mse', optimizer='adam')
 history_object = model.fit(X_train, y_train, validation_split=0.2, shuffle=True, epochs=25, verbose = 1)
 model.save('model.h5')
 # visualize loss
-### print the keys contained in the history object
+# print the keys contained in the history object
 print(history_object.history.keys())
 
-### plot the training and validation loss for each epoch
+# plot the training and validation loss for each epoch
 plt.plot(history_object.history['loss'])
 plt.plot(history_object.history['val_loss'])
 plt.title('model mean squared error loss')
